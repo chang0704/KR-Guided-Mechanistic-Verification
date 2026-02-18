@@ -1,0 +1,96 @@
+# ═══════════════════════════════════════════════════════════
+# KR-Guided Mechanistic Verification — Default Configuration
+# Every value matches the paper specification exactly.
+# ═══════════════════════════════════════════════════════════
+
+# ── Task & Data ──
+task:
+  name: increment              # increment | decrement
+  bit_widths: [8, 12, 16, 20, 24]
+  train_fraction: 0.5          # α
+  train_fraction_sweep: [0.3, 0.5, 0.7]
+  max_samples: 50000           # for n ∈ {20, 24}
+
+# ── Transformer ──
+model:
+  layers: 2                    # ℓ
+  heads: 2                     # H
+  d_model: 128                 # d
+  d_mlp: 512                   # 4d, GELU
+  max_seq_len: 49              # 2 × 24 + 1
+  vocab_size: 3                # {0, 1, #}
+  layer_norm: pre              # pre-norm
+  layer_norm_eps: 1.0e-5
+  dropout: 0.0
+  output_bias: false
+  weight_tying: false
+  activation: gelu
+  init: kaiming_uniform        # PyTorch defaults
+
+# ── Parameter-Matched Baselines ──
+baselines:
+  lstm:
+    hidden_dim: 223            # 400,957 params
+  gru:
+    hidden_dim: 258            # 402,483 params
+  mamba:
+    hidden_dim: 239            # 403,674 params
+
+# ── Training ──
+training:
+  optimizer: adamw
+  lr: 1.0e-3
+  betas: [0.9, 0.98]
+  weight_decay: 1.0            # λ — key for grokking
+  batch_size: 512
+  warmup_steps: 500            # linear
+  lr_schedule: cosine          # decay to 0
+  gradient_clip: null          # none
+  total_steps: 100000
+  seeds: 5
+  checkpoint_every: 200        # C = 500 per run
+  fine_checkpoint_range: [12000, 20000]
+  fine_checkpoint_every: 50
+
+# ── Grokking Protocol ──
+grokking:
+  memorization_threshold: 1.0  # train per-seq acc
+  grokking_threshold: 0.99     # test per-seq acc
+
+# ── DAS ──
+das:
+  subspace_dim: 1              # r = 1 (binary variables)
+  components:
+    - [1, attn]
+    - [1, mlp]
+    - [2, attn]
+    - [2, mlp]
+  optimizer: adam
+  lr: 1.0e-3
+  betas: [0.9, 0.999]
+  epochs: 10                   # saturates by epoch 5
+  train_pairs: 2000
+  eval_pairs: 1000
+  wrong_scm_ops: [and, or]
+
+# ── SAE ──
+sae:
+  architecture: topk
+  dict_multiplier: 8           # D = 8d = 1024
+  topk: 8                      # K
+  optimizer: adam
+  lr: 3.0e-4
+  batch_size: 256
+  epochs: 50
+  num_forward_passes: 20000
+  decoder_renorm: true
+  mono_rho_threshold: 0.9
+  mono_acc_threshold: 0.95
+  convergence_cos_threshold: 0.8
+
+# ── Ablations ──
+ablations:
+  depth: [1, 2, 3]
+  weight_decay: [0.0, 0.1, 1.0]
+  subspace_dim: [1, 2, 4, 8]
+  train_fraction: [0.3, 0.5, 0.7]
