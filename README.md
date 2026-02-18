@@ -250,21 +250,6 @@ python figures/figure1_pipeline.py        # Figure 1 composite panel
 
 ---
 
-## 🎨 Color Scheme
-
-All figures use a unified palette:
-
-| Element | Color | Hex |
-|---------|-------|-----|
-| B_prev / Series 1 | 🔵 Blue | `#2166AC` |
-| C_in / Series 2 | 🔴 Red | `#B2182B` |
-| Y_out / Series 3 | 🟢 Green | `#1B7837` |
-| ‖θ‖₂ | 🟣 Purple | `#7570B3` |
-| Test accuracy | 🟠 Orange | `#E8710A` |
-| IIA_min | ⚫ Black | `#000000` |
-
----
-
 ## 📁 Checkpoint Format
 
 ```python
